@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 // GET /:postid 
 router.get('/:postid', async (req, res) => {
     try {
-        const post = await db.Post.findById(req.params.postid).populate('comments').populate('likes')
+        const post = await db.Post.findById(req.params.postid).populate('comments').populate('likes').populate('user')
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -87,21 +87,22 @@ router.delete('/:postid', async (req, res) => {
     }
 })
 
-router.post('/:postid/comment', async (req, res) => {
+router.post('/:postid/comments', async (req, res) => {
     try {
-      // create new user
-    //   const newComment = {content: req.body.content, user: req.body.user}
-      const post = await db.Post.findById(req.params.postid)
-      post.comments.push(req.body)
+      const user = await db.User.findById(req.body.userId)
+      const newComment = {content: req.body.content, user: user}
+      const post = await db.Post.findById(req.params.postid).populate('user')
+      post.comments = [newComment, ...post.comments]
       await post.save()
-      res.status(201).json(post)
+      console.log(post)
+      res.status(201).json(newComment)
     } catch (error) {
       console.log(error)
       res.status(500).json({ msg: 'server error'  })
     }
 })
 // PUT /:postid/comment/:commentid 
-router.put('/:postid/comment/:commentid', async (req, res) => {
+router.put('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
@@ -113,7 +114,7 @@ router.put('/:postid/comment/:commentid', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
-router.delete('/:postid/comment/:commentid', async (req, res) => {
+router.delete('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
