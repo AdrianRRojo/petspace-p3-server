@@ -4,6 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const rowdy = require('rowdy-logger')
 const authLockedRoute = require('./controllers/api-v1/authLockedRoute')
+const { cloudinary } = require('./utils/cloudinary')
 
 // config express app
 const app = express()
@@ -13,8 +14,12 @@ const rowdyResults = rowdy.begin(app)
 // cross origin resource sharing 
 app.use(cors())
 // request body parsing
-app.use(express.urlencoded({ extended: false })) // optional 
-app.use(express.json())
+app.use(express.urlencoded({ limit: "50mb",extended: false })) // optional added file size limit
+app.use(express.json({ limit: "50mb" })) //Added a file size limit to 50mb
+
+const fileupload = require('express-fileupload'); 
+
+app.use(fileupload({useTempFiles: true}))
 
 const myMiddleWare = (req, res, next) => {
   console.log('hello from a middleware')

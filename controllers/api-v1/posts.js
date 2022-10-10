@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const db = require('../../models')
 
+const { cloudinary } = require('../../utils/cloudinary')
 
 
 // GET /posts - test endpoint
@@ -20,15 +21,33 @@ router.get('/', async (req, res) => {
     }
     
 })
-
+router.get('/api/images', async (req,res ) => {
+   try{
+    const {resources} = await cloudinary.search.expression("folder: dev_setups")
+    .execute()
+    const publicIds = resources.map(file => file.public_id)
+    res.send(publicIds)
+   }catch(err){
+    console.warn(err)
+   }
+})
 // POST /users/register - CREATE new user
 router.post('/', async (req, res) => {
   try {
     // create new user
     const user = await db.User.findById(req.body.userId)
+    console.log(req.body.userId, "This is the user ID")
+    const fileStr = req.body.body
+    console.log(fileStr, " this is the file string")
+    const uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+        upload_preset: 'dev_setups',
+    })
+    console.log(uploadedResponse)
     const newPost = await db.Post.create({
         content: req.body.content,
-        user: user})
+        user: user
+    
+    })
     user.posts.push(newPost)
     await user.save()
     res.status(201).json(newPost)
