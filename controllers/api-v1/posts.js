@@ -9,7 +9,7 @@ const uploads = multer({ dest: 'uploads/' })
 // GET /posts - test endpoint
 router.get('/', async (req, res) => {
     try {
-        const user1 = await db.User.findById(req.headers.userid).populate('posts').populate({path: 'following', populate: {path: 'posts'}})
+        const user1 = await db.User.findById(req.headers.userid).populate({path: 'posts', populate: {path: 'user'}}).populate({path: 'following', populate: {path: 'posts',populate: {path: 'user'}}})
         const friendsAndUser = user1.following.concat(user1)
         let posts = []
         friendsAndUser.forEach((people) => {
@@ -33,7 +33,7 @@ router.get('/api/images', async (req,res ) => {
     console.warn(err)
    }
 })
-// POST /users/register - CREATE new user
+
 router.post('/', uploads.single('image'), async (req, res) => {
     try {
       // create new user
@@ -61,7 +61,7 @@ router.post('/', uploads.single('image'), async (req, res) => {
 // GET /:postid 
 router.get('/:postid', async (req, res) => {
     try {
-        const post = await db.Post.findById(req.params.postid).populate('comments').populate('likes').populate('user')
+        const post = await db.Post.findById(req.params.postid).populate({path:'comments', populate: {path: 'user'}}).populate('likes').populate('user')
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -73,12 +73,25 @@ router.get('/:postid', async (req, res) => {
 router.post('/:postid/like', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
+        console.log(post)
         const user = await db.User.findById(req.body.userId)
-        const like = await db.Like.create({
-            user: user
-        })
+        console.log(user)
+        const like = {user: user}
         post.likes.push(like)
         await post.save()
+        res.json(post)
+    } catch(err) {
+        console.log(err)
+        res.status(500).json({ msg: 'server error'  })
+    }
+})
+router.delete('/:postid/like', async (req, res) => {
+    try {
+        const post = await db.Post.findById(req.params.postid)
+        const index = post.likes.findIndex((like) => {return like.user.id === req.body.userId})
+        post.likes.splice(index, 1)
+        await post.save()
+        res.sendStatus(204)
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -96,6 +109,7 @@ router.put('/:postid', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
+
 
 router.delete('/:postid', async (req, res) => {
     try {
