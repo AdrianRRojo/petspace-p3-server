@@ -35,6 +35,8 @@ const PostSchema = new mongoose.Schema({
     },
     comments: [CommentSchema],
     likes: [LikeSchema]    
+},{
+    timestamps: true
 })
 
 module.exports = mongoose.model('Post', PostSchema)

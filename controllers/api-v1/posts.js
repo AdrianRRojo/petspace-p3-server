@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 // GET /:postid 
 router.get('/:postid', async (req, res) => {
     try {
-        const post = await db.Post.findById(req.params.postid)
+        const post = await db.Post.findById(req.params.postid).populate('comments').populate('likes')
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -105,7 +105,7 @@ router.put('/:postid/comment/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
-        post.comments[index] = {content: req.body.content, user: res.locals.user}
+        post.comments[index] = {...post.comments[index], content: req.body.content}
         await post.save()
         res.json(post)
     } catch(err) {
