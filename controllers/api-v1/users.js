@@ -170,7 +170,22 @@ router.put('/:username/edit', async (req, res) => {
     const options = {new: true} 
     const updatedUser = await db.User.findOneAndUpdate({ username: req.params.username}, req.body, options)
     res.json(updatedUser)
-    console.log(updatedUser)
+    // console.log(updatedUser)
+  }catch(err) {
+    console.warn(err)
+    res.status(500).json({ msg: 'server error'  })
+  }
+})
+
+router.put('/:username/photo', uploads.single('image'), async (req, res) => {
+  try {
+    // console.log(req.body, req.file)
+    const uploadedResponse = await cloudinary.uploader.upload(req.file.path)
+    const options = {new: true} 
+    const updatedUser = await db.User.findByIdAndUpdate(req.body.userId, {image: uploadedResponse.url}, options)
+    res.json(updatedUser)
+    unlinkSync(req.file.path)
+    
   }catch(err) {
     console.warn(err)
     res.status(500).json({ msg: 'server error'  })
