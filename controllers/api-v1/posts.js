@@ -159,7 +159,7 @@ router.put('/:postid/comments/:commentid', async (req, res) => {
 })
 router.delete('/:postid/comments/:commentid', async (req, res) => {
     try {
-        const post = await db.Post.findById(req.params.postid)
+        const post = await db.Post.findById(req.params.postid).populate({path:'comments', populate: {path: 'user'}})
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
         post.comments.splice(index, 1)
         await post.save()
