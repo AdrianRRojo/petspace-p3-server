@@ -38,7 +38,7 @@ router.post('/', uploads.single('image'), async (req, res) => {
     try {
       // create new user
       const user = await db.User.findById(req.body.userId)
-      // console.log(req.body, req.file)
+      console.log(req.body, req.file)
       const uploadedResponse = await cloudinary.uploader.upload(req.file.path)
       console.log(uploadedResponse)
   
@@ -48,10 +48,10 @@ router.post('/', uploads.single('image'), async (req, res) => {
           photo: uploadedResponse.url     
       
       })
-      unlinkSync(req.files.path)
       user.posts.push(newPost)
       await user.save()
       res.status(201).json(newPost)
+      unlinkSync(req.file.path)
     } catch (error) {
       console.log(error)
       res.status(500).json({ msg: 'server error'  })
@@ -73,9 +73,7 @@ router.get('/:postid', async (req, res) => {
 router.post('/:postid/like', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
-        console.log(post)
         const user = await db.User.findById(req.body.userId)
-        console.log(user)
         const like = {user: user}
         post.likes.push(like)
         await post.save()
@@ -85,13 +83,13 @@ router.post('/:postid/like', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
-router.delete('/:postid/like', async (req, res) => {
+router.put('/:postid/like', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
-        const index = post.likes.findIndex((like) => {return like.user.id === req.body.userId})
+        const index = post.likes.findIndex((like) => {
+            return like.user == req.body.userId})
         post.likes.splice(index, 1)
         await post.save()
-        res.sendStatus(204)
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -135,14 +133,25 @@ router.post('/:postid/comments', async (req, res) => {
       res.status(500).json({ msg: 'server error'  })
     }
 })
+router.get('/:postid/comments/:commentid', async (req, res) => {
+    try {
+        const post = await db.Post.findById(req.params.postid).populate('comments')
+        const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
+        post.comments[index]
+        res.json(post.comments[index])
+    } catch(err) {
+        console.log(err)
+        res.status(500).json({ msg: 'server error'  })
+    }
+})
 // PUT /:postid/comment/:commentid 
 router.put('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
-        post.comments[index] = {...post.comments[index], content: req.body.content}
+        post.comments[index] = {_id: post.comments[index]._id,user: post.comments[index].user, content: req.body.content}
         await post.save()
-        res.json(post)
+        res.json(post.comments[index])
     } catch(err) {
         console.log(err)
         res.status(500).json({ msg: 'server error'  })
@@ -154,7 +163,7 @@ router.delete('/:postid/comments/:commentid', async (req, res) => {
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
         post.comments.splice(index, 1)
         await post.save()
-        res.sendStatus(204)
+        res.json(post)
     } catch(err) {
         console.log(err)
         res.status(500).json({ msg: 'server error'  })

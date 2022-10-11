@@ -17,10 +17,6 @@ app.use(cors())
 app.use(express.urlencoded({ limit: "50mb",extended: false })) // optional added file size limit
 app.use(express.json({ limit: "50mb" })) //Added a file size limit to 50mb
 
-const fileupload = require('express-fileupload'); 
-
-app.use(fileupload({useTempFiles: true}))
-
 const myMiddleWare = (req, res, next) => {
   console.log('hello from a middleware')
   res.locals.myData = 'some info'
@@ -48,4 +44,3 @@ app.listen(PORT, () => {
   rowdyResults.print()
   console.log(`is that port ${PORT} I hear? 🙉`)
 })
-
