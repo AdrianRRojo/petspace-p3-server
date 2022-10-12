@@ -25,7 +25,7 @@ router.post('/register', uploads.single('image'), async (req, res) => {
     })
     
     // don't allow emails to register twice
-    if(findUser) return res.status(400).json({ msg: 'email exists already' })
+    if(findUser) return res.status(400).json({ msg: 'email exists already' })    
     
     
     // hash password
@@ -33,25 +33,31 @@ router.post('/register', uploads.single('image'), async (req, res) => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds)
     
-    // upload profile photo
-    // console.log(req.body, req.file)
-    const uploadedResponse = await cloudinary.uploader.upload(req.file.path)
-    // console.log(uploadedResponse)
-
+    
     // create new user
     const newUser = new db.User({
       username: req.body.username,
       email: req.body.email,
       password: hashedPassword,
-      image: uploadedResponse.url,
+      // image: uploadedResponse.url,
       type: req.body.type,
       private: req.body.private,
       bio: req.body.bio      
     })
-  
+    
     await newUser.save()
+    
+    if (req.file) {
+      // upload profile photo
+      // console.log(req.body, req.file)
+      const uploadedResponse = await cloudinary.uploader.upload(req.file.path)
+      // console.log(uploadedResponse)
+      // create jwt payload
+      newUser.image = uploadedResponse.url
+      await newUser.save()
 
-    // create jwt payload
+      unlinkSync(req.file.path)
+    }
     const payload = {
       username: newUser.username,
       email: newUser.email, 
@@ -62,7 +68,6 @@ router.post('/register', uploads.single('image'), async (req, res) => {
     const token = await jwt.sign(payload, process.env.JWT_SECRET)
 
     res.json({ token })
-    unlinkSync(req.file.path)
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'server error'  })

@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
         friendsAndUser.forEach((people) => {
             posts = posts.concat(people.posts)
         })
-        posts.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1))
+        posts.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
         res.json(posts)
     } catch (error) {
         console.log(error)
@@ -75,6 +75,8 @@ router.post('/:postid/like', async (req, res) => {
         const post = await db.Post.findById(req.params.postid)
         const user = await db.User.findById(req.body.userId)
         const like = {user: user}
+        user.likedposts.push(post)
+        await user.save()
         post.likes.push(like)
         await post.save()
         res.json(post)
@@ -88,8 +90,13 @@ router.put('/:postid/like', async (req, res) => {
         const post = await db.Post.findById(req.params.postid)
         const index = post.likes.findIndex((like) => {
             return like.user == req.body.userId})
+        const user = await db.User.findById(req.body.userId)
+        const indexLikedPost = user.likedposts.findIndex((likepost) => {
+            return likepost == post.id})
+        user.likedposts.splice(indexLikedPost, 1)
         post.likes.splice(index, 1)
         await post.save()
+        await user.save()
         res.json(post)
     } catch(err) {
         console.log(err)
@@ -111,6 +118,11 @@ router.put('/:postid', async (req, res) => {
 
 router.delete('/:postid', async (req, res) => {
     try {
+        post = await db.Post.findById(req.params.postid)
+        const userid = post.user
+        const foundUser = await db.User.findById(userid)
+        foundUser.posts.splice(foundUser.posts.indexOf(req.params.postid),1)
+        await foundUser.save()
         await db.Post.findByIdAndDelete(req.params.postid)
         res.sendStatus(204)
     } catch(err) {
@@ -126,7 +138,7 @@ router.post('/:postid/comments', async (req, res) => {
       const post = await db.Post.findById(req.params.postid).populate('user')
       post.comments = [newComment, ...post.comments]
       await post.save()
-      console.log(post)
+
       res.status(201).json(newComment)
     } catch (error) {
       console.log(error)
