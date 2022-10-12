@@ -44,11 +44,11 @@ router.post('/', uploads.single('image'), async (req, res) => {
   
       const newPost = await db.Post.create({
           content: req.body.content,
-          user: user,
+          user: user.id,
           photo: uploadedResponse.url     
       
       })
-      user.posts.push(newPost)
+      user.posts.push(newPost.id)
       await user.save()
       res.status(201).json(newPost)
       unlinkSync(req.file.path)
