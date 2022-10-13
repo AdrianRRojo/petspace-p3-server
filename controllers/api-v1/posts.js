@@ -155,7 +155,7 @@ router.put('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
         const index = post.comments.findIndex((comment) => {return comment.id === req.params.commentid})
-        post.comments[index] = {_id: post.comments[index]._id,user: post.comments[index].user, content: req.body.content}
+        post.comments[index] = {id: post.comments[index].id, user: post.comments[index].user, content: req.body.content}
         await post.save()
         res.json(post.comments[index])
     } catch(err) {
