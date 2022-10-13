@@ -23,24 +23,14 @@ router.get('/', async (req, res) => {
     }
     
 })
-router.get('/api/images', async (req,res ) => {
-   try{
-    const {resources} = await cloudinary.search.expression("folder: dev_setups")
-    .execute()
-    const publicIds = resources.map(file => file.public_id)
-    res.send(publicIds)
-   }catch(err){
-    console.warn(err)
-   }
-})
 
 router.post('/', uploads.single('image'), async (req, res) => {
     try {
-      // create new user
+      // find the user
       const user = await db.User.findById(req.body.userId)
-      console.log(req.body, req.file)
+    //   console.log(req.body, req.file)
       const uploadedResponse = await cloudinary.uploader.upload(req.file.path)
-      console.log(uploadedResponse)
+    //   console.log(uploadedResponse)
   
       const newPost = await db.Post.create({
           content: req.body.content,
@@ -85,6 +75,7 @@ router.post('/:postid/like', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
+// Unlike a post
 router.put('/:postid/like', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
@@ -103,7 +94,8 @@ router.put('/:postid/like', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
-// PUT /:postid 
+
+// Update a post
 router.put('/:postid', async (req, res) => {
     try {
         const options = {new: true}
@@ -115,7 +107,7 @@ router.put('/:postid', async (req, res) => {
     }
 })
 
-
+// Delete a post
 router.delete('/:postid', async (req, res) => {
     try {
         post = await db.Post.findById(req.params.postid)
@@ -130,7 +122,7 @@ router.delete('/:postid', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
-
+// Add a comment
 router.post('/:postid/comments', async (req, res) => {
     try {
       const user = await db.User.findById(req.body.userId)
@@ -145,6 +137,7 @@ router.post('/:postid/comments', async (req, res) => {
       res.status(500).json({ msg: 'server error'  })
     }
 })
+// Read a specific comment
 router.get('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid).populate('comments')
@@ -156,7 +149,8 @@ router.get('/:postid/comments/:commentid', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
-// PUT /:postid/comment/:commentid 
+
+// Update a specific comment
 router.put('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid)
@@ -169,6 +163,7 @@ router.put('/:postid/comments/:commentid', async (req, res) => {
         res.status(500).json({ msg: 'server error'  })
     }
 })
+// delete a specific comment
 router.delete('/:postid/comments/:commentid', async (req, res) => {
     try {
         const post = await db.Post.findById(req.params.postid).populate({path:'comments', populate: {path: 'user'}})

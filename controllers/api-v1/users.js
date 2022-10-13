@@ -130,7 +130,7 @@ router.get('/:username', authLockedRoute, async (req, res) => {
 router.post('/:username', async (req, res) => {
   // you will have access to the user on the res.local.user
   try {
-    console.log(req.body)
+    // console.log(req.body)
     const friendUser = await db.User.findOne({
       username: req.params.username
     })
@@ -169,9 +169,10 @@ router.post('/:username', async (req, res) => {
   }
 })
 
+// Update a user's profile
 router.put('/:username/edit', async (req, res) => {
   try {
-    console.log(req.body)
+    // console.log(req.body)
     const options = {new: true} 
     const updatedUser = await db.User.findOneAndUpdate({ username: req.params.username}, req.body, options)
     res.json(updatedUser)
@@ -181,7 +182,7 @@ router.put('/:username/edit', async (req, res) => {
     res.status(500).json({ msg: 'server error'  })
   }
 })
-
+// update a user's profile photo
 router.put('/:username/photo', uploads.single('image'), async (req, res) => {
   try {
     // console.log(req.body, req.file)
@@ -196,7 +197,7 @@ router.put('/:username/photo', uploads.single('image'), async (req, res) => {
     res.status(500).json({ msg: 'server error'  })
   }
 })
-
+// delete a profile
 router.delete('/:username', authLockedRoute, async (req, res) => {
   try {
     await db.User.findByIdAndDelete(res.locals.user.id)
